@@ -1,23 +1,28 @@
 #!/usr/bin/python3
-''' 2-recursive function'''
-
+"""
+Using reddit api
+"""
 import requests
-import sys
+after = None
 
 
-def recurse(subreddit, hot_list=[], after=None):
-    '''return list of all hot posts titles of a subreddit'''
-    user_agent = {'User-agent': 'test45'}
-    posts = requests.get('http://www.reddit.com/r/{}/hot.json?after={}'
-                         .format(subreddit, after), headers=user_agent)
-    if posts.status_code == 200:
-        posts = posts.json()['data']
-        aft = posts['after']
-        posts = posts['children']
-        for post in posts:
-            hot_list.append(post['data']['title'])
-        if aft is not None:
-            recurse(subreddit, hot_list, aft)
-        return(hot_list)
+def recurse(subreddit, hot_list=[]):
+    """returning top ten post titles recursively"""
+    global after
+    user_agent = {'User-Agent': 'api_advanced-project'}
+    url = "https://www.reddit.com/r/{}/hot.json".format(subreddit)
+    parameters = {'after': after}
+    results = requests.get(url, params=parameters, headers=user_agent,
+                           allow_redirects=False)
+
+    if results.status_code == 200:
+        after_data = results.json().get("data").get("after")
+        if after_data is not None:
+            after = after_data
+            recurse(subreddit, hot_list)
+        all_titles = results.json().get("data").get("children")
+        for title_ in all_titles:
+            hot_list.append(title_.get("data").get("title"))
+        return hot_list
     else:
-        return(None)
+        return (None)
